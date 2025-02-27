@@ -95,7 +95,8 @@ Feel free to explore, suggest improvements, or start planning your next trip wit
 
 # 🌍 Explore smarter with IndAI Trip! 🌟
 
-# Connect with us on
-gmail- indaitrip@gmail.com
-indatgram- https://www.instagram.com/indaitrip?igsh=MWRyaGFpNTAzaG43cw==
-facebook- https://www.facebook.com/profile.php?id=61573195636791
+## 📱 Connect With Us
+
+- 📧 Gmail: [indaitrip@gmail.com](mailto:indaitrip@gmail.com)  
+- 📷 Instagram: [IndAI Trip](https://www.instagram.com/indaitrip?igsh=MWRyaGFpNTAzaG43cw==)  
+- 📘 Facebook: [IndAI Trip](https://www.facebook.com/profile.php?id=61573195636791)  
