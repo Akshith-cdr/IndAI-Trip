@@ -94,3 +94,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 Feel free to explore, suggest improvements, or start planning your next trip with IndAI Trip! 🌟
 
 # 🌍 Explore smarter with IndAI Trip! 🌟
+
+# Connect with us on
+gmail- indaitrip@gmail.com
+indatgram- https://www.instagram.com/indaitrip?igsh=MWRyaGFpNTAzaG43cw==
+facebook- https://www.facebook.com/profile.php?id=61573195636791
