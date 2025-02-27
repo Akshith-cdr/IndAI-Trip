@@ -100,3 +100,4 @@ Feel free to explore, suggest improvements, or start planning your next trip wit
 - 📧 Gmail: [indaitrip@gmail.com](mailto:indaitrip@gmail.com)  
 - 📷 Instagram: [IndAI Trip](https://www.instagram.com/indaitrip?igsh=MWRyaGFpNTAzaG43cw==)  
 - 📘 Facebook: [IndAI Trip](https://www.facebook.com/profile.php?id=61573195636791)  
+- 🔗 X: [IndAI Trip](https://x.com/IndAI_Trip?t=tm9jYLzZv4pM5urvp0eiBQ&s=08)  
