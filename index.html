@@ -470,126 +470,70 @@
     </footer>
 
     <script>
-        // Generate particles
-        const particlesContainer = document.querySelector('.particles');
-        for (let i = 0; i < 100; i++) {
-            const particle = document.createElement('div');
-            particle.classList.add('particle');
-            particle.style.left = `${Math.random() * 100}vw`;
-            particle.style.top = `${Math.random() * 100}vh`;
-            particle.style.animationDuration = `${Math.random() * 5 + 3}s`;
-            particlesContainer.appendChild(particle);
+        const backendURL = "http://localhost:5000/auth"; // Your backend base URL
+
+// Sign In
+document.getElementById("signin-btn").addEventListener("click", async () => {
+    const email = document.getElementById("signin-email").value;
+    const password = document.getElementById("signin-password").value;
+
+    try {
+        const response = await fetch(`${backendURL}/signin`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email, password }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert(`Sign In Successful! Welcome, ${email}`);
+            localStorage.setItem("token", data.token); // Store JWT token
+            window.location.href = "dashboard.html"; // Redirect to dashboard
+        } else {
+            document.getElementById("signin-error").textContent = data.message || "Invalid email or password.";
+            document.getElementById("signin-error").style.display = "block";
         }
-    
-        // Scroll animations
-        const scrollSections = document.querySelectorAll('.features-section');
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                }
-            });
-        }, { threshold: 0.5 });
-    
-        scrollSections.forEach(section => {
-            observer.observe(section);
+    } catch (error) {
+        document.getElementById("signin-error").textContent = "Server error. Try again.";
+        document.getElementById("signin-error").style.display = "block";
+    }
+});
+
+// Sign Up
+document.getElementById("signup-btn").addEventListener("click", async () => {
+    const name = document.getElementById("signup-name").value;
+    const email = document.getElementById("signup-email").value;
+    const password = document.getElementById("signup-password").value;
+
+    try {
+        const response = await fetch(`${backendURL}/signup`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ name, email, password }),
         });
-    
-        // Sign-In Modal
-        const signinModal = document.querySelector('.signin-modal');
-        const exploreBtn = document.querySelector('.explore-btn');
-        const closeModal = document.querySelector('.close-modal');
-        const toggleSignup = document.getElementById('toggle-signup');
-        const toggleSignin = document.getElementById('toggle-signin');
-        const signinForm = document.getElementById('signin-form');
-        const signupForm = document.getElementById('signup-form');
-        const authTitle = document.getElementById('auth-title');
-        const signinError = document.getElementById('signin-error');
-        const signupError = document.getElementById('signup-error');
-    
-        // Open Modal
-        exploreBtn.addEventListener('click', () => {
-            signinModal.classList.add('visible');
-        });
-    
-        // Close Modal
-        closeModal.addEventListener('click', () => {
-            signinModal.classList.remove('visible');
-        });
-    
-        // Toggle between Sign In and Sign Up
-        toggleSignup.addEventListener('click', () => {
-            signinForm.style.display = 'none';
-            signupForm.style.display = 'block';
-            authTitle.textContent = 'Sign Up';
-        });
-    
-        toggleSignin.addEventListener('click', () => {
-            signupForm.style.display = 'none';
-            signinForm.style.display = 'block';
-            authTitle.textContent = 'Sign In';
-        });
-    
-        // Sign In
-        document.getElementById('signin-btn').addEventListener('click', async () => {
-            const email = document.getElementById('signin-email').value;
-            const password = document.getElementById('signin-password').value;
-    
-            try {
-                const response = await fetch('http://localhost:5000/api/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ email, password }),
-                });
-    
-                const data = await response.json();
-    
-                if (response.ok) {
-                    alert('Sign In Successful! Welcome, ' + data.user.name);
-                    signinModal.classList.remove('visible');
-                } else {
-                    signinError.textContent = data.msg || 'Invalid email or password.';
-                    signinError.style.display = 'block';
-                }
-            } catch (error) {
-                signinError.textContent = 'An error occurred. Please try again.';
-                signinError.style.display = 'block';
-            }
-        });
-    
-        // Sign Up
-        document.getElementById('signup-btn').addEventListener('click', async () => {
-            const name = document.getElementById('signup-name').value;
-            const email = document.getElementById('signup-email').value;
-            const password = document.getElementById('signup-password').value;
-    
-            try {
-                const response = await fetch('http://localhost:5000/api/register', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ name, email, password }),
-                });
-    
-                const data = await response.json();
-    
-                if (response.ok) {
-                    alert('Sign Up Successful! Please sign in.');
-                    signupForm.style.display = 'none';
-                    signinForm.style.display = 'block';
-                    authTitle.textContent = 'Sign In';
-                } else {
-                    signupError.textContent = data.msg || 'User already exists. Please sign in.';
-                    signupError.style.display = 'block';
-                }
-            } catch (error) {
-                signupError.textContent = 'An error occurred. Please try again.';
-                signupError.style.display = 'block';
-            }
-        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert("Sign Up Successful! Please sign in.");
+            document.getElementById("signup-form").style.display = "none";
+            document.getElementById("signin-form").style.display = "block";
+            document.getElementById("auth-title").textContent = "Sign In";
+        } else {
+            document.getElementById("signup-error").textContent = data.message || "User already exists.";
+            document.getElementById("signup-error").style.display = "block";
+        }
+    } catch (error) {
+        document.getElementById("signup-error").textContent = "Server error. Try again.";
+        document.getElementById("signup-error").style.display = "block";
+    }
+});
+
     </script>
 </body>
 </html>
