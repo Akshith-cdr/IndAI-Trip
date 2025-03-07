@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IndAI Trip UI</title>
+    <!-- Leaflet CSS & JS (No API Key Needed) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <!-- Leaflet Routing Machine CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+    <!-- Weather Simulations CSS -->
+    <style>
+        /* Add this CSS for the delete button */
+        .delete-photo-btn {
+            position: fixed;
+            left: 20px;
+            bottom: 170px;
+            padding: 10px 20px;
+            background: rgba(255, 0, 0, 0.8);
+            border: none;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 5px;
+            z-index: 1001;
+            display: none; /* Hidden by default */
+        }
+
+        .delete-photo-btn:hover {
+            background: rgba(255, 0, 0, 1);
+        }
+
+        /* Rest of your CSS remains the same */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: white;
+            overflow: hidden; /* Prevent scrolling */
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: #1e1e1e;
+            padding: 0px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.3s ease-in-out;
+            position: fixed;
+            left: -250px; /* Hide sidebar by default */
+            height: 100vh;
+            z-index: 1000;
+        }
+
+        .sidebar.open {
+            transform: translateX(250px); /* Show sidebar */
+        }
+
+        .logo {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .logo img {
+            width: 100px;
+            height: auto;
+        }
+
+        .menu button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background: #333;
+            border: none;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            transition: background 0.3s ease-in-out;
+        }
+
+        .menu button:hover {
+            background: #555;
+        }
+
+        .user-profile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            background: gray;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logout {
+            width: 100%;
+            padding: 10px;
+            background: red;
+            border: none;
+            color: white;
+            cursor: pointer;
+            margin-top: 10px; /* Added margin for spacing */
+        }
+
+        /* Menu Button */
+        .menu-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #333;
+            border: none;
+            color: white;
+            padding: 10px;
+            cursor: pointer;
+            z-index: 1001;
+            border-radius: 5px;
+        }
+
+        .menu-button:hover {
+            background: #555;
+        }
+
+        /* Search Bar */
+        .search-bar {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            z-index: 1001;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            background: #333;
+            color: white;
+        }
+
+        /* Map */
+        #map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: 0; /* Ensure map is below floating elements */
+        }
+
+        /* Weather Button */
+        .weather-btn {
+            position: fixed;
+            left: 20px;
+            bottom: 20px;
+            padding: 10px 20px;
+            background: rgba(0, 123, 255, 0.8);
+            border: none;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 5px;
+            z-index: 1001; /* Ensure it's above the map */
+            transition: left 0.3s ease-in-out; /* Smooth transition */
+        }
+
+        .weather-btn:hover {
+            background: rgba(0, 123, 255, 1);
+        }
+
+        /* SOS Button */
+        .sos-btn {
+            position: fixed;
+            left: 30px;
+            bottom: 70px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 0, 0, 0.8);
+            border: none;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s ease, left 0.3s ease-in-out; /* Smooth transition */
+            z-index: 1001; /* Ensure it's above the map */
+        }
+
+        .sos-btn:hover {
+            background: rgba(255, 0, 0, 1);
+        }
+
+        /* Live Location Button */
+        .live-location-btn {
+            position: fixed;
+            right: 25px;
+            bottom: 90px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(0, 123, 255, 0.8);
+            border: none;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            z-index: 1001; /* Ensure it's above the map */
+        }
+
+        .live-location-btn:hover {
+            background: rgba(0, 123, 255, 1);
+        }
+
+        /* Chatbot Container */
+        .chatbot-container {
+            width: 300px;
+            background: #1e1e1e;
+            border-radius: 10px;
+            position: fixed;
+            right: 20px;
+            bottom: 150px;
+            z-index: 1000;
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease-in-out;
+        }
+
+        .chatbot-container.open {
+            display: flex; /* Show when open */
+            width: 400px; /* Larger width when expanded */
+            height: 500px; /* Larger height when expanded */
+            bottom: 170px; /* Adjust position */
+        }
+
+        .chatbot-header {
+            background: #333;
+            padding: 10px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chatbot-header span {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .chatbot-header button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .chatbot-messages {
+            height: 100%;
+            overflow-y: auto;
+            padding: 10px;
+            background: #1e1e1e;
+        }
+
+        .chatbot-input-container {
+            display: flex;
+            padding: 10px;
+            background: #333;
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+
+        .chatbot-input {
+            flex: 1;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            background: #444;
+            color: white;
+        }
+
+        .chatbot-send-btn {
+            background: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            margin-left: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .chatbot-send-btn:hover {
+            background: #45a049;
+        }
+
+        .chatbot-toggle-btn {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            width: 60px; /* Larger size */
+            height: 60px; /* Larger size */
+            border-radius: 50%;
+            background: #4CAF50;
+            border: none;
+            color: white;
+            font-size: 24px; /* Larger font size */
+            cursor: pointer;
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .chatbot-toggle-btn:hover {
+            background: #45a049;
+        }
+
+        .chatbot-toggle-btn img {
+            width: 40px; /* Larger bot image */
+            height: 40px; /* Larger bot image */
+        }
+
+        /* Chatbot Message Styles */
+        .chatbot-message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 10px;
+            max-width: 80%;
+            word-wrap: break-word;
+            position: relative;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .user-message {
+            background: #4CAF50;
+            color: white;
+            margin-left: auto;
+            border: 1px solid #45a049;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .bot-message {
+            background: #555;
+            color: white;
+            margin-right: auto;
+            border: 1px solid #444;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .timestamp {
+            font-size: 12px;
+            color: #bbb;
+            margin-top: 5px;
+            display: block;
+            text-align: right;
+        }
+
+        /* Typing Indicator */
+        .typing-indicator {
+            display: none;
+            padding: 10px;
+            font-style: italic;
+            color: #888;
+            text-align: left;
+        }
+
+        .typing-indicator.visible {
+            display: block;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* AI Trip Planner Modal */
+        .ai-trip-planner-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            max-height: 80vh; /* Limit modal height */
+            background: #1e1e1e;
+            border-radius: 10px;
+            padding: 20px;
+            z-index: 1002;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            overflow: hidden; /* Prevent overflow */
+        }
+
+        .ai-trip-planner-modal.open {
+            display: block;
+        }
+
+        .ai-trip-planner-modal h2 {
+            margin-top: 0;
+            font-size: 24px;
+            color: white;
+            text-align: center;
+        }
+
+        .ai-trip-planner-modal input,
+        .ai-trip-planner-modal textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: none;
+            background: #333;
+            color: white;
+            box-sizing: border-box; /* Ensure padding is included in width */
+        }
+
+        .ai-trip-planner-modal button {
+            width: 100%;
+            padding: 10px;
+            background: #4CAF50;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .ai-trip-planner-modal button:hover {
+            background: #45a049;
+        }
+
+        /* Scrollable Itinerary Result Container */
+        #itineraryResult {
+            margin-top: 20px;
+            padding: 10px;
+            background: #333;
+            border-radius: 5px;
+            color: white;
+            white-space: pre-wrap; /* Preserve formatting for pre tags */
+            max-height: 200px; /* Limit height */
+            overflow-y: auto; /* Enable vertical scrolling */
+            box-sizing: border-box; /* Ensure padding is included in height */
+        }
+
+        /* AI Trip Planner Toggle Button */
+        .ai-trip-planner-toggle-btn {
+            position: fixed;
+            right: 20px;
+            bottom: 720px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #FFA500;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .ai-trip-planner-toggle-btn:hover {
+            background: #FF8C00;
+        }
+
+        .ai-trip-planner-toggle-btn img {
+            width: 40px;
+            height: 40px;
+        }
+
+        /* About Us, Privacy Policy, FAQs & Help, Contact Us Overlay Styles */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            transition: opacity 0.3s ease-in-out;
+            z-index: 1003;
+        }
+
+        .popup {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 700px;
+            text-align: left;
+            color: #333;
+            box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .popup h2 {
+            font-size: 26px;
+            color: #007BFF;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .popup p {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #444;
+            margin-bottom: 15px;
+        }
+
+        .popup .close-btn {
+            display: block;
+            margin: 20px auto 0;
+            padding: 10px 18px;
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+
+        .popup .close-btn:hover {
+            background-color: #cc0000;
+        }
+
+        .faq-container {
+            margin-top: 20px;
+        }
+
+        .faq-item {
+            background: #f9f9f9;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            padding: 12px 18px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: bold;
+            border: 1px solid #ddd;
+        }
+
+        .faq-item:hover {
+            background: #f1f1f1;
+        }
+
+        .faq-answer {
+            display: none;
+            padding: 10px 18px;
+            background: #f9f9f9;
+            border-radius: 0 0 10px 10px;
+            border-top: 1px solid #ddd;
+        }
+
+        .social-icons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .social-icons a {
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .social-icons a:hover {
+            transform: scale(1.1);
+        }
+
+        .social-icons img {
+            width: 40px;
+            height: 40px;
+        }
+
+        /* Recommendation Engine Styles */
+        .recommendation-btn {
+            position: fixed;
+            top: 20px;
+            right: 390px;
+            padding: 10px;
+            background: #4CAF50;
+            border: none;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 5px;
+            z-index: 1001;
+        }
+
+        .recommendation-btn:hover {
+            background: #45a049;
+        }
+
+        .recommendation-panel {
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            width: 300px;
+            background: #1e1e1e;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: none;
+        }
+
+        .recommendation-panel.open {
+            display: block;
+        }
+
+        .recommendation-panel h3 {
+            margin-top: 0;
+            font-size: 18px;
+            color: white;
+        }
+
+        .recommendation-panel ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .recommendation-panel li {
+            padding: 10px;
+            background: #333;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            color: white;
+        }
+
+        .recommendation-panel .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        /* Smartwatch Integration Styles */
+        .smartwatch-data {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 10px;
+            color: white;
+            z-index: 1001;
+            display: none;
+        }
+
+        .smartwatch-data p {
+            margin: 5px 0;
+        }
+
+        /* Photo Upload Button */
+        /* Photo Upload Button */
+
+        .weather-effect {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.rain {
+    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('rain.gif');
+    animation: rain 1s linear infinite;
+}
+
+.sun {
+    background: linear-gradient(rgba(255, 255, 0, 0.2), rgba(255, 255, 0, 0.2)), url('sun.gif');
+}
+
+.snow {
+    background: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), url('snow.gif');
+    animation: snow 5s linear infinite;
+}
+
+@keyframes rain {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 100% 100%; }
+}
+
+@keyframes snow {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 100% 100%; }
+}
+.photo-upload-btn {
+    position: fixed;
+    left: 20px;
+    bottom: 120px; /* Adjust this value to position it above the SOS button */
+    padding: 10px 20px;
+    background: rgba(0, 123, 255, 0.8); /* Same as Weather button */
+    border: none;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 5px;
+    z-index: 1001; /* Ensure it's above the map */
+    transition: background 0.3s ease; /* Smooth transition */
+}
+
+.photo-upload-btn:hover {
+    background: rgba(0, 123, 255, 1); /* Darker on hover */
+}
+
+        /* Photo Upload Input */
+        #photoInput {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Menu Button -->
+    <button class="menu-button" id="menuButton">☰</button>
+
+    <!-- Search Bar -->
+    <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search for a city or place...">
+    </div>
+
+    <!-- Recommendation Button -->
+    <button class="recommendation-btn" id="recommendationBtn">Recommendations</button>
+
+    <!-- Recommendation Panel -->
+    <div class="recommendation-panel" id="recommendationPanel">
+        <button class="close-btn" id="closeRecommendationBtn">×</button>
+        <h3>Nearby Places</h3>
+        <ul id="recommendationList"></ul>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="logo">
+            <img src="Screenshot 2025-02-28 181735.png" alt="Geo Guide Logo">
+        </div>
+        <nav class="menu">
+            <button>Wishlist</button>
+            <button>My trips</button>
+            <button>Rewards</button>
+            <button>Recent Trip Review</button>
+            <button>Blogs & Travel Tips</button>
+            <button onclick="togglePopup('aboutUs')">About Us</button>
+            <button onclick="togglePopup('privacyPolicy')">Privacy Policy</button>
+            <button onclick="togglePopup('faqsHelp')">FAQs & Help</button>
+            <button onclick="togglePopup('contactUs')">Contact Us</button>
+            <button onclick="connectSmartwatch()">Connect Smartwatch</button> <!-- New Smartwatch Button -->
+        </nav>
+        <div class="user-profile">
+            <div class="avatar">pp</div>
+            <span>Username</span>
+            <button class="logout">Logout</button>
+        </div>
+    </aside>
+
+    <!-- Map -->
+    <div id="map"></div>
+
+    <!-- Weather Button -->
+    <button class="weather-btn" id="weatherBtn">Weather</button>
+
+    <!-- SOS Button -->
+    <button class="sos-btn">SOS</button>
+
+    <!-- Live Location Button -->
+    <button class="live-location-btn" id="liveLocationBtn">📍</button>
+
+    <!-- Chatbot Toggle Button -->
+    <button class="chatbot-toggle-btn" id="chatbotToggleBtn">
+        <img src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" alt="Chatbot Icon">
+    </button>
+
+    <!-- Chatbot Container -->
+    <div class="chatbot-container" id="chatbotContainer">
+        <div class="chatbot-header">
+            <span>Geo Guide Chatbot</span>
+            <button id="closeChatbotBtn">×</button>
+        </div>
+        <div class="chatbot-messages" id="chatbotMessages">
+            <!-- Chatbot messages will appear here -->
+        </div>
+        <div class="typing-indicator" id="typingIndicator">Bot is typing...</div>
+        <div class="chatbot-input-container">
+            <input type="text" class="chatbot-input" id="chatbotInput" placeholder="Type a message...">
+            <button class="chatbot-send-btn" id="chatbotSendBtn">Send</button>
+            <button class="chatbot-voice-btn" id="chatbotVoiceBtn">🎤</button>
+        </div>
+    </div>
+
+    <!-- AI Trip Planner Toggle Button -->
+    <button class="ai-trip-planner-toggle-btn" id="aiTripPlannerToggleBtn">
+        <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="AI Trip Planner Icon">
+    </button>
+
+    <!-- AI Trip Planner Modal -->
+    <div class="ai-trip-planner-modal" id="aiTripPlannerModal">
+        <h2>AI Trip Planner 🌍</h2>
+        <input type="text" id="startDate" placeholder="Start Date (YYYY-MM-DD)">
+        <input type="text" id="endDate" placeholder="End Date (YYYY-MM-DD)">
+        <input type="text" id="startPlace" placeholder="Starting Place">
+        <input type="text" id="destination" placeholder="Destination">
+        <input type="text" id="budget" placeholder="Budget (e.g., $1000)">
+        <input type="text" id="specialActivities" placeholder="Special Activities (e.g., hiking, museums)">
+        <button id="generateItineraryBtn">Generate Itinerary</button>
+        <div id="itineraryResult"></div> <!-- Scrollable result container -->
+    </div>
+
+    <!-- Weather Effect Layer -->
+    <div id="weatherEffect" class="weather-effect"></div>
+
+    <!-- Smartwatch Data Display -->
+    <div class="smartwatch-data" id="smartwatchData">
+        <p>Heart Rate: <span id="heartRate">--</span> bpm</p>
+        <p>Steps: <span id="steps">--</span></p>
+    </div>
+
+    <!-- Photo Upload Button -->
+    <button class="photo-upload-btn" id="photoUploadBtn">Upload Photo</button>
+    <input type="file" id="photoInput" accept="image/*">
+
+    <!-- Delete Photo Button -->
+    <button class="delete-photo-btn" id="deletePhotoBtn">Delete Photo</button>
+
+    <!-- About Us Overlay -->
+    <div class="overlay" id="aboutUs" onclick="togglePopup('aboutUs')">
+        <div class="popup" onclick="event.stopPropagation()">
+            <h2>About Us</h2>
+            <p><b>IndAI Trip</b> is your smart travel companion designed to help users explore <b>Points of Interest (POIs), destinations</b> effortlessly in a smarter, more personalized way.</p>
+            <p>Whether you're planning a trip or discovering new places on the go, our platform provides personalized recommendations, real-time weather updates, and an interactive map to guide your journey.</p>
+            <p>With AI-powered assistance, seamless navigation, and smart itinerary planning, we ensure a stress-free and enriching travel experience. Let IndAI Trip be your guide to discovering the world with ease and confidence.</p>
+            <p><b>🌍 Our Mission:</b> To enhance travel experiences by utilizing AI-driven insights and cloud technologies to deliver personalized and accurate travel guidance. We aim to simplify POI discovery and ensure that every user gets recommendations that match their preferences and travel habits.</p>
+            <p><b>🚀 Future Plans:</b> - Advanced AI-powered recommendations - Deeper integration with Google Maps API for live navigation - A dedicated mobile app for effortless travel planning</p>
+            <button class="close-btn" onclick="togglePopup('aboutUs')">Close</button>
+        </div>
+    </div>
+
+    <!-- Privacy Policy Overlay -->
+    <div class="overlay" id="privacyPolicy" onclick="togglePopup('privacyPolicy')">
+        <div class="popup" onclick="event.stopPropagation()">
+            <h2>Privacy Policy</h2>
+            <p>At <b>IndAI Trip</b>, we prioritize <b>user privacy and data security</b>. Below are the key details of our privacy policy.</p>
+            <p><b>🔹 Data Collection:</b> We collect minimal personal information, including name, email for account creation, and location data for personalized recommendations.</p>
+            <p><b>🔹 How We Use Your Data:</b> Your data is solely used to <b>improve platform functionality</b>, deliver relevant recommendations, and ensure account security.</p>
+            <p><b>🔹 Security Measures:</b> We implement encryption, secure cloud storage (AWS/Firebase), access controls, and conduct regular security audits to prevent unauthorized access.</p>
+            <p><b>🔹 Third-Party Integrations:</b> IndAI Trip does not sell user data. However, we integrate services like <b>Google Maps API</b> and <b>AWS/GCP</b>, which operate under their own privacy policies.</p>
+            <p><b>🔹 User Control:</b> Users have full control over their data, with the ability to <b>access, update, delete</b>, or disable location tracking at any time.</p>
+            <p><b>🔹 Account Deletion:</b> If you delete your account, all personal data will be <b>permanently removed</b> from our system.</p>
+            <p><b>🔹 Contact Us:</b> For privacy-related concerns, users can reach out to us at <b>@indaitrip@gmail.com</b>.</p>
+            <button class="close-btn" onclick="togglePopup('privacyPolicy')">Close</button>
+        </div>
+    </div>
+
+    <!-- FAQs & Help Overlay -->
+    <div class="overlay" id="faqsHelp" onclick="togglePopup('faqsHelp')">
+        <div class="popup" onclick="event.stopPropagation()">
+            <h2>FAQs & Help</h2>
+            <p>At <b>IndAI Trip</b>, we strive to make travel exploration <b>easy and seamless</b>. Below are answers to some frequently asked questions.</p>
+            <div class="faq-container">
+                <div class="faq-item" onclick="toggleAnswer(1)">🔹 <b>What is IndAI Trip?</b></div>
+                <div class="faq-answer" id="faq1">IndAI Trip is an <b>AI-powered travel assistant</b> that provides smart recommendations for places to visit, based on user preferences and real-time trends.</div>
+                <div class="faq-item" onclick="toggleAnswer(2)">🔹 <b>How does the AI-powered guide work?</b></div>
+                <div class="faq-answer" id="faq2">Our platform uses <b>machine learning models</b> to analyze user behavior, location data, and past interactions to generate personalized travel suggestions.</div>
+                <div class="faq-item" onclick="toggleAnswer(3)">🔹 <b>What data sources does IndAI Trip use?</b></div>
+                <div class="faq-answer" id="faq3">We use a combination of <b>Google Places API, user feedback, and AI-driven analysis</b> to ensure accurate and up-to-date recommendations.</div>
+                <div class="faq-item" onclick="toggleAnswer(4)">🔹 <b>How do I create an account and log in?</b></div>
+                <div class="faq-answer" id="faq4">Users can sign up using their <b>email and password</b> or log in directly with <b>Google Authentication</b> for a hassle-free experience.</div>
+                <div class="faq-item" onclick="toggleAnswer(5)">🔹 <b>What should I do if I forget my password?</b></div>
+                <div class="faq-answer" id="faq5">Click on the <b>"Forgot Password"</b> option on the login page, and a reset link will be sent to your registered email.</div>
+                <div class="faq-item" onclick="toggleAnswer(6)">🔹 <b>Can I delete my account?</b></div>
+                <div class="faq-answer" id="faq6">Yes, users can delete their account from <b>Settings > Account > Delete Account</b>. Once deleted, all personal data will be removed.</div>
+                <div class="faq-item" onclick="toggleAnswer(7)">🔹 <b>Why is my location not being detected?</b></div>
+                <div class="faq-answer" id="faq7">Ensure your <b>device’s location services</b> are enabled and that your browser has granted location access to our website.</div>
+                <div class="faq-item" onclick="toggleAnswer(8)">🔹 <b>How can I report incorrect POI information?</b></div>
+                <div class="faq-answer" id="faq8">Click on the <b>"Report a POI"</b> button on the respective location page and submit the necessary details.</div>
+                <div class="faq-item" onclick="toggleAnswer(9)">🔹 <b>How can I contact customer support?</b></div>
+                <div class="faq-answer" id="faq9">Reach out to us at <b>@indaitrip@gmail.com</b> or access <b>Live Chat</b> through the Help section.</div>
+            </div>
+            <button class="close-btn" onclick="togglePopup('faqsHelp')">Close</button>
+        </div>
+    </div>
+
+    <!-- Contact Us Overlay -->
+    <div class="overlay" id="contactUs" onclick="togglePopup('contactUs')">
+        <div class="popup" onclick="event.stopPropagation()">
+            <h2>Contact Us</h2>
+            <p>We'd love to hear from you! Whether you have questions, feedback, or just want to say hello, feel free to reach out to us through any of the following platforms:</p>
+
+            <div class="social-icons">
+                <a href="mailto:info@indaitrip.com" title="Gmail">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg" alt="Gmail">
+                </a>
+                <a href="https://instagram.com/indaitrip" target="_blank" title="Instagram">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg" alt="Instagram">
+                </a>
+                <a href="https://twitter.com/indaitrip" target="_blank" title="X (Twitter)">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6f/Logo_of_Twitter.svg" alt="X (Twitter)">
+                </a>
+                <a href="https://facebook.com/indaitrip" target="_blank" title="Facebook">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg" alt="Facebook">
+                </a>
+            </div>
+
+            <p>Our team is always here to assist you and ensure you have the best experience with <b>IndAI Trip</b>. Let's stay connected!</p>
+
+            <button class="close-btn" onclick="togglePopup('contactUs')">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript to toggle sidebar
+        const menuButton = document.getElementById('menuButton');
+        const sidebar = document.getElementById('sidebar');
+        const weatherBtn = document.getElementById('weatherBtn');
+        const sosBtn = document.querySelector('.sos-btn');
+
+        menuButton.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            // Adjust button positions when sidebar is open
+            if (sidebar.classList.contains('open')) {
+                weatherBtn.style.left = '270px'; // Move weather button to the right
+                sosBtn.style.left = '280px'; // Move SOS button to the right
+            } else {
+                weatherBtn.style.left = '20px'; // Reset weather button position
+                sosBtn.style.left = '30px'; // Reset SOS button position
+            }
+        });
+
+        // Initialize Leaflet Map
+        var map = L.map('map').setView([13.5527, 79.9982], 13); // Sri City, Andhra Pradesh
+
+        // Load OSM tiles (Free & No API Key Needed)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Add a marker for Sri City
+        L.marker([13.5555, 80.0266]).addTo(map)
+            .bindPopup('IIIT Sri City, Andhra Pradesh 📍')
+            .openPopup();
+
+        // Chatbot Functionality
+        const chatbotToggleBtn = document.getElementById('chatbotToggleBtn');
+        const chatbotContainer = document.getElementById('chatbotContainer');
+        const closeChatbotBtn = document.getElementById('closeChatbotBtn');
+        const chatbotMessages = document.getElementById('chatbotMessages');
+        const chatbotInput = document.getElementById('chatbotInput');
+        const chatbotSendBtn = document.getElementById('chatbotSendBtn');
+        const chatbotVoiceBtn = document.getElementById('chatbotVoiceBtn');
+        const typingIndicator = document.getElementById('typingIndicator');
+
+        // Toggle chatbot visibility
+        chatbotToggleBtn.addEventListener('click', () => {
+            chatbotContainer.classList.toggle('open');
+        });
+
+        // Close chatbot
+        closeChatbotBtn.addEventListener('click', () => {
+            chatbotContainer.classList.remove('open');
+        });
+
+        // Send message
+        chatbotSendBtn.addEventListener('click', sendMessage);
+        chatbotInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        // Voice recognition
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        chatbotVoiceBtn.addEventListener('click', () => {
+            recognition.start();
+            chatbotVoiceBtn.textContent = 'Listening...';
+        });
+
+        recognition.addEventListener('result', (event) => {
+            const transcript = event.results[0][0].transcript;
+            chatbotInput.value = transcript;
+            chatbotVoiceBtn.textContent = '🎤';
+            sendMessage();
+        });
+
+        recognition.addEventListener('error', (event) => {
+            console.error('Speech recognition error:', event.error);
+            chatbotVoiceBtn.textContent = '🎤';
+        });
+
+        recognition.addEventListener('end', () => {
+            chatbotVoiceBtn.textContent = '🎤';
+        });
+
+        async function sendMessage() {
+            const userMessage = chatbotInput.value.trim();
+            if (userMessage === '') return;
+
+            // Add user message to chat
+            const userMessageDiv = document.createElement('div');
+            userMessageDiv.className = 'chatbot-message user-message';
+            userMessageDiv.textContent = userMessage;
+
+            // Add timestamp
+            const userTimestamp = document.createElement('span');
+            userTimestamp.className = 'timestamp';
+            userTimestamp.textContent = new Date().toLocaleTimeString();
+            userMessageDiv.appendChild(userTimestamp);
+
+            chatbotMessages.appendChild(userMessageDiv);
+
+            // Clear input
+            chatbotInput.value = '';
+            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+
+            // Show typing indicator
+            typingIndicator.classList.add('visible');
+
+            try {
+                // Simulate bot response delay
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+
+                // Send user input to the backend
+                const response = await fetch('http://localhost:8501/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: userMessage }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Hide typing indicator
+                typingIndicator.classList.remove('visible');
+
+                // Add bot response to chat
+                const botMessageDiv = document.createElement('div');
+                botMessageDiv.className = 'chatbot-message bot-message';
+                botMessageDiv.textContent = data.response;
+
+                // Add timestamp
+                const botTimestamp = document.createElement('span');
+                botTimestamp.className = 'timestamp';
+                botTimestamp.textContent = new Date().toLocaleTimeString();
+                botMessageDiv.appendChild(botTimestamp);
+
+                chatbotMessages.appendChild(botMessageDiv);
+                chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+            } catch (error) {
+                console.error('Error:', error);
+                typingIndicator.classList.remove('visible');
+
+                const errorMessageDiv = document.createElement('div');
+                errorMessageDiv.className = 'chatbot-message bot-message';
+                errorMessageDiv.textContent = 'Sorry, something went wrong. Please try again.';
+
+                // Add timestamp
+                const errorTimestamp = document.createElement('span');
+                errorTimestamp.className = 'timestamp';
+                errorTimestamp.textContent = new Date().toLocaleTimeString();
+                errorMessageDiv.appendChild(errorTimestamp);
+
+                chatbotMessages.appendChild(errorMessageDiv);
+                chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+            }
+        }
+
+        // Search Functionality
+        const searchInput = document.getElementById('searchInput');
+
+        searchInput.addEventListener('keypress', async (e) => {
+            if (e.key === 'Enter') {
+                const query = searchInput.value.trim();
+                if (query === '') return;
+
+                try {
+                    // Use Nominatim API to geocode the location
+                    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+
+                    if (data.length > 0) {
+                        const { lat, lon } = data[0];
+                        map.setView([lat, lon], 13); // Center the map on the location
+                        L.marker([lat, lon]).addTo(map) // Add a marker
+                            .bindPopup(query)
+                            .openPopup();
+                    } else {
+                        alert('Location not found!');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Failed to fetch location data. Please try again.');
+                }
+            }
+        });
+
+        // Live Location Functionality
+        const liveLocationBtn = document.getElementById('liveLocationBtn');
+        let liveLocationMarker = null;
+        let liveLocationWatchId = null;
+
+        liveLocationBtn.addEventListener('click', () => {
+            if (liveLocationWatchId === null) {
+                // Start live location tracking
+                liveLocationWatchId = navigator.geolocation.watchPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+
+                        // Remove previous marker if it exists
+                        if (liveLocationMarker) {
+                            map.removeLayer(liveLocationMarker);
+                        }
+
+                        // Add new marker for live location
+                        liveLocationMarker = L.marker([latitude, longitude]).addTo(map)
+                            .bindPopup('Your Live Location')
+                            .openPopup();
+
+                        // Center the map on the live location
+                        map.setView([latitude, longitude], 13);
+                    },
+                    (error) => {
+                        console.error('Error fetching live location:', error);
+                        alert('Failed to fetch live location. Please ensure location access is enabled.');
+                    },
+                    { enableHighAccuracy: true }
+                );
+
+                liveLocationBtn.textContent = '📍 Stop Live Location';
+            } else {
+                // Stop live location tracking
+                navigator.geolocation.clearWatch(liveLocationWatchId);
+                liveLocationWatchId = null;
+
+                // Remove the live location marker
+                if (liveLocationMarker) {
+                    map.removeLayer(liveLocationMarker);
+                    liveLocationMarker = null;
+                }
+
+                liveLocationBtn.textContent = '📍 Live Location';
+            }
+        });
+
+        // Weather Functionality
+        const weatherEffect = document.getElementById('weatherEffect');
+        const OPENWEATHERMAP_API_KEY = '1caf34686c50aa0a074ec9db9cae0953'; // Replace with your API key
+
+        weatherBtn.addEventListener('click', async () => {
+            try {
+                // Get user's current location
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject);
+                });
+
+                const { latitude, longitude } = position.coords;
+
+                // Fetch weather data from OpenWeatherMap API
+                const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${OPENWEATHERMAP_API_KEY}&units=metric`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    const { temp, humidity } = data.main;
+                    const { description, icon } = data.weather[0];
+
+                    // Display weather information
+                    alert(`Weather: ${description}\nTemperature: ${temp}°C\nHumidity: ${humidity}%`);
+
+                    // Add weather simulation based on weather condition
+                    weatherEffect.className = 'weather-effect'; // Reset class
+                    if (description.includes('rain')) {
+                        weatherEffect.classList.add('rain');
+                    } else if (description.includes('clear')) {
+                        weatherEffect.classList.add('sun');
+                    } else if (description.includes('snow')) {
+                        weatherEffect.classList.add('snow');
+                    }
+                } else {
+                    throw new Error(data.message || 'Failed to fetch weather data');
+                }
+            } catch (error) {
+                console.error('Error fetching weather:', error);
+                alert('Failed to fetch weather data. Please try again.');
+            }
+        });
+
+        // AI Trip Planner Functionality
+        const aiTripPlannerToggleBtn = document.getElementById('aiTripPlannerToggleBtn');
+        const aiTripPlannerModal = document.getElementById('aiTripPlannerModal');
+        const generateItineraryBtn = document.getElementById('generateItineraryBtn');
+        const itineraryResult = document.getElementById('itineraryResult');
+
+        // Toggle AI Trip Planner Modal
+        aiTripPlannerToggleBtn.addEventListener('click', () => {
+            aiTripPlannerModal.classList.toggle('open');
+        });
+
+        // Generate Itinerary
+        generateItineraryBtn.addEventListener('click', async () => {
+            const startDate = document.getElementById('startDate').value.trim();
+            const endDate = document.getElementById('endDate').value.trim();
+            const startPlace = document.getElementById('startPlace').value.trim();
+            const destination = document.getElementById('destination').value.trim();
+            const budget = document.getElementById('budget').value.trim();
+            const specialActivities = document.getElementById('specialActivities').value.trim();
+
+            if (!startDate || !endDate || !startPlace || !destination || !budget || !specialActivities) {
+                alert('Please fill in all fields!');
+                return;
+            }
+
+            try {
+                // Geocode start place and destination
+                const startResponse = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(startPlace)}`);
+                const startData = await startResponse.json();
+
+                const destResponse = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(destination)}`);
+                const destData = await destResponse.json();
+
+                if (startData.length === 0 || destData.length === 0) {
+                    alert('Could not find the start place or destination. Please check the names and try again.');
+                    return;
+                }
+
+                const startLatLng = [startData[0].lat, startData[0].lon];
+                const destLatLng = [destData[0].lat, destData[0].lon];
+
+                // Clear previous route if any
+                if (window.routeControl) {
+                    map.removeControl(window.routeControl);
+                }
+
+                // Add route to the map without the directions box
+                window.routeControl = L.Routing.control({
+                    waypoints: [
+                        L.latLng(startLatLng[0], startLatLng[1]),
+                        L.latLng(destLatLng[0], destLatLng[1])
+                    ],
+                    routeWhileDragging: true,
+                    show: false // Hide the directions box
+                }).addTo(map);
+
+                // Send request to backend to generate itinerary
+                const response = await fetch('http://localhost:8503', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        startDate,
+                        endDate,
+                        startPlace,
+                        destination,
+                        budget,
+                        specialActivities,
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                itineraryResult.innerHTML = `<pre>${data.itinerary}</pre>`;
+            } catch (error) {
+                console.error('Error:', error);
+                itineraryResult.innerHTML = 'Failed to generate itinerary. Please try again.';
+            }
+        });
+
+        // Toggle Popup Functionality
+        function togglePopup(id) {
+            var popup = document.getElementById(id);
+            popup.style.display = popup.style.display === "flex" ? "none" : "flex";
+        }
+
+        // Toggle FAQ Answers
+        function toggleAnswer(num) {
+            var answer = document.getElementById("faq" + num);
+            answer.style.display = answer.style.display === "block" ? "none" : "block";
+        }
+
+        // Recommendation Engine Functionality
+        const recommendationBtn = document.getElementById('recommendationBtn');
+        const recommendationPanel = document.getElementById('recommendationPanel');
+        const closeRecommendationBtn = document.getElementById('closeRecommendationBtn');
+        const recommendationList = document.getElementById('recommendationList');
+
+        // Toggle recommendation panel
+        recommendationBtn.addEventListener('click', () => {
+            recommendationPanel.classList.toggle('open');
+            if (recommendationPanel.classList.contains('open')) {
+                fetchRecommendations();
+            }
+        });
+
+        // Close recommendation panel
+        closeRecommendationBtn.addEventListener('click', () => {
+            recommendationPanel.classList.remove('open');
+        });
+
+        async function fetchRecommendations() {
+    try {
+        // Get user's current location
+        const position = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject);
+        });
+
+        const { latitude, longitude } = position.coords;
+
+        // Fetch nearby places using Recommendation Engine
+        const response = await fetch('http://localhost:8502', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ latitude, longitude }),
+        });
+
+        const data = await response.json();
+
+        // Process and display recommendations
+        if (data && data.length > 0) {
+            const places = data.map(place => ({
+                name: place.name || 'Unnamed',
+                type: place.type || 'Unknown',
+                latitude: place.latitude,
+                longitude: place.longitude,
+                distance: haversine(latitude, longitude, place.latitude, place.longitude),
+                address: place.address || 'Unknown Address',
+                details: place.details || 'No data available'
+            }));
+
+            // Sort by distance
+            places.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+
+            // Clear previous recommendations
+            recommendationList.innerHTML = '';
+
+            // Display recommendations
+            places.forEach(place => {
+                const li = document.createElement('li');
+                li.textContent = `${place.name} (${place.type}) - ${place.distance} meters`;
+                recommendationList.appendChild(li);
+
+                // Add marker to the map
+                L.marker([place.latitude, place.longitude]).addTo(map)
+                    .bindPopup(`${place.name} (${place.type})`)
+                    .openPopup();
+            });
+        } else {
+            recommendationList.innerHTML = '<li>No places found nearby.</li>';
+        }
+    } catch (error) {
+        console.error('Error fetching recommendations:', error);
+        recommendationList.innerHTML = '<li>Failed to fetch recommendations. Please try again.</li>';
+    }
+}
+
+        // Haversine formula to calculate distance between two points (lat, lon) in meters
+        function haversine(lat1, lon1, lat2, lon2) {
+            const R = 6371000; // Earth radius in meters
+            const phi1 = lat1 * Math.PI / 180;
+            const phi2 = lat2 * Math.PI / 180;
+            const deltaPhi = (lat2 - lat1) * Math.PI / 180;
+            const deltaLambda = (lon2 - lon1) * Math.PI / 180;
+
+            const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+                      Math.cos(phi1) * Math.cos(phi2) *
+                      Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+            return R * c; // Distance in meters
+        }
+
+        // Smartwatch Integration
+        const smartwatchData = document.getElementById('smartwatchData');
+        const heartRateElement = document.getElementById('heartRate');
+        const stepsElement = document.getElementById('steps');
+
+        async function connectSmartwatch() {
+            try {
+                // Request Bluetooth device with health-related services
+                const device = await navigator.bluetooth.requestDevice({
+                    filters: [{ services: ['heart_rate', 'health_thermometer'] }],
+                });
+
+                // Connect to the device
+                const server = await device.gatt.connect();
+
+                // Get the Heart Rate service
+                const heartRateService = await server.getPrimaryService('heart_rate');
+
+                // Get the Heart Rate Measurement characteristic
+                const heartRateCharacteristic = await heartRateService.getCharacteristic('heart_rate_measurement');
+
+                // Start notifications for heart rate
+                heartRateCharacteristic.startNotifications();
+                heartRateCharacteristic.addEventListener('characteristicvaluechanged', (event) => {
+                    const value = event.target.value;
+                    const heartRate = value.getUint8(1); // Extract heart rate value
+                    heartRateElement.textContent = heartRate;
+                });
+
+                // Get the Step Counter service (if available)
+                const stepCounterService = await server.getPrimaryService('step_counter');
+                const stepCounterCharacteristic = await stepCounterService.getCharacteristic('step_count');
+
+                // Start notifications for step count
+                stepCounterCharacteristic.startNotifications();
+                stepCounterCharacteristic.addEventListener('characteristicvaluechanged', (event) => {
+                    const value = event.target.value;
+                    const steps = value.getUint16(0, true); // Extract step count value
+                    stepsElement.textContent = steps;
+                });
+
+                // Show smartwatch data
+                smartwatchData.style.display = 'block';
+            } catch (error) {
+                console.error('Error connecting to smartwatch:', error);
+                alert('Failed to connect to smartwatch. Please ensure Bluetooth is enabled and the device is nearby.');
+            }
+        }
+
+         // Photo Upload Functionality
+         const photoUploadBtn = document.getElementById('photoUploadBtn');
+        const photoInput = document.getElementById('photoInput');
+        const deletePhotoBtn = document.getElementById('deletePhotoBtn');
+        let photoMarker = null; // Variable to store the current photo marker
+
+        photoUploadBtn.addEventListener('click', () => {
+            photoInput.click();
+        });
+
+        photoInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const photoUrl = e.target.result;
+                    placePhotoOnMap(photoUrl);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function placePhotoOnMap(photoUrl) {
+            // Remove the previous marker if it exists
+            if (photoMarker) {
+                map.removeLayer(photoMarker);
+                deletePhotoBtn.style.display = 'none'; // Hide delete button
+            }
+
+            // Add a new marker when the map is clicked
+            map.on('click', (e) => {
+                const { lat, lng } = e.latlng;
+
+                // Create a new marker with the photo
+                photoMarker = L.marker([lat, lng], {
+                    icon: L.icon({
+                        iconUrl: photoUrl,
+                        iconSize: [50, 50], // Adjust size as needed
+                        iconAnchor: [25, 25] // Center the icon
+                    })
+                }).addTo(map)
+                .bindPopup(`<img src="${photoUrl}" alt="Memory Photo" style="width: 100px; height: auto;">`)
+                .openPopup();
+
+                // Show the delete button
+                deletePhotoBtn.style.display = 'block';
+            });
+        }
+
+        // Delete Photo Functionality
+        deletePhotoBtn.addEventListener('click', () => {
+            if (photoMarker) {
+                map.removeLayer(photoMarker);
+                photoMarker = null;
+                deletePhotoBtn.style.display = 'none'; // Hide delete button
+            }
+        });
+    </script>
+</body>
+</html>
